@@ -15,11 +15,25 @@ module Jb
 
   # Rails 7.1+: A monkey-patch not to stringify rendered object from JB templates
   module BaseToSCanceller
+    class NilWrapper
+      def to_s
+        nil
+      end
+
+      def method_missing(method_name, *args, &block)
+        nil.__send__(method_name, *args, &block)
+      end
+    end
+
     def _run(method, template, *, **)
       val = super
       if template.respond_to?(:handler) && (template.handler == Jb::Handler)
-        def val.to_s
-          self
+        if val.nil?
+          val = NilWrapper.new
+        else
+          def val.to_s
+            self
+          end
         end
       end
       val
